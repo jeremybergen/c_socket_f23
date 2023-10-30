@@ -11,6 +11,7 @@ c socket file server
 
 int main(int argc, char ** argv) {
     FILE *infile;
+    // FILE *outfile;
     size_t fileSize;
     int serverSocket, clientSocket;
     struct sockaddr_in address;
@@ -29,13 +30,20 @@ int main(int argc, char ** argv) {
     rewind(infile);
 
     char fileBuffer[fileSize];
+    memset(fileBuffer, 0, fileSize);
 
     // Maybe reading the file.....
-    fread(fileBuffer, fileSize, fileSize, infile);
+    fread(fileBuffer, fileSize, 1, infile);
+
+    // outfile = fopen("serverTest.out", "wb");
+
+    // fwrite(fileBuffer, fileSize, 1, outfile);
+
+    // fclose(outfile);
 
     address.sin_addr.s_addr = INADDR_ANY;
     address.sin_family = AF_INET;
-    address.sin_port = htons(1234);
+    address.sin_port = htons(1235);
 
     serverSocket = socket(AF_INET, SOCK_STREAM, 0);
     setsockoptStatus = setsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes));
@@ -61,6 +69,7 @@ int main(int argc, char ** argv) {
     printf("Client ready to receive file\n");
     memset(buffer, 0, strlen(buffer));
 
+    printf("DEBUG: fileBuffer: %s\n", fileBuffer);
     send(clientSocket, fileBuffer, fileSize, 0);
 
     recv(clientSocket, buffer, 1024, 0);
@@ -71,6 +80,7 @@ int main(int argc, char ** argv) {
 
     // }
     close(serverSocket);
+    shutdown(serverSocket, SHUT_RDWR);
     close(infile);
     return 0;
 }

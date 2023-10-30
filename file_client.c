@@ -14,9 +14,13 @@ int main(int argc, char ** argv) {
     struct sockaddr_in address;
     int addrSize = sizeof(address);
 
+    FILE *outFile;
+
+    outFile = fopen("clientRecv.out", "wb");
+
     inet_pton(AF_INET, "127.0.0.1", &(address.sin_addr));
     address.sin_family = AF_INET;
-    address.sin_port = htons(1234);
+    address.sin_port = htons(1235);
 
     newSocket = socket(AF_INET, SOCK_STREAM, 0);
     connect(newSocket, (struct sockaddr *) &address, addrSize);
@@ -30,6 +34,7 @@ int main(int argc, char ** argv) {
     printf("Received file size from server: %s\n", buffer);
     fileSize = atol(buffer);
     char fileBuffer[fileSize];
+    memset(fileBuffer, 0, fileSize);
     memset(buffer, 0, strlen(buffer));
 
     sprintf(buffer, "send file");
@@ -41,13 +46,19 @@ int main(int argc, char ** argv) {
 
     while(offset < fileSize) {
         recvBytes = recv(newSocket, buffer, 1024, 0);
-        sprintf(fileBuffer, buffer);
+        fwrite(buffer, recvBytes, 1, outFile);
+        // sprintf(fileBuffer, "%s", buffer);
+        printf("Received: %s\n", buffer);
         memset(buffer, 0, strlen(buffer));
         offset += recvBytes;
     }
 
     sprintf(buffer, "Received: %ld\n", offset);
+
+    // fwrite(fileBuffer, fileSize, 1, outFile);
     send(newSocket, buffer, strlen(buffer), 0);
+
+    fclose(outFile);
 
     return 0;
 }
