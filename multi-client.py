@@ -10,7 +10,7 @@ def main():
     username = input("What is your username? ")
     usernamelength = len(username)
 
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
         
         s.connect((host, port))
         s.setblocking(False)
@@ -23,12 +23,18 @@ def main():
 
             if message:
                 print(f"Sending: {message}")
-                s.send(message.encode())
+                s.send(f"{len(message):<{headerlength}}{message}".encode())
             try:
                 while True:
                     #receive messages
-                    recvMessage = s.recv(1024).decode()
-                    print(f"Received: {recvMessage}")
+                    header = s.recv(headerlength).decode()
+                    messageLength = int(header)
+                    clientName = s.recv(messageLength).decode()
+                    header = s.recv(headerlength).decode()
+                    messageLength = int(header)
+                    recvMessage = s.recv(messageLength).decode()
+                    # recvMessage = s.recv(int(s.recv(headerlength).decode())).decode()
+                    print(f"{clientName}: {recvMessage}")
                     continue
             
             except IOError as e:
